@@ -8,4 +8,4 @@ React + Vite + TypeScript frontend for the Markr task.
 2. npm install
 3. npm run dev
 
-The app expects the backend API at `/api/users`. Use a proxy or run the backend on the same origin.
+Configure the backend API connection with env var VITE_API_BASE_URL.
