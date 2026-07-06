@@ -18,7 +18,10 @@ router.post('/', async (req, res) => {
     const imported = await JasperImporter.importResults(xml);
     return res.json({ imported });
   } catch (error) {
-    return res.status(400).json({ error: 'Invalid XML format' });
+    if (error instanceof Error && error.message === 'Invalid XML format') {
+      return res.status(400).json({ error: 'Invalid XML format' });
+    }
+    return res.status(500).json({error: 'Internal server error'});
   }
 });
 

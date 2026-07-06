@@ -109,5 +109,5 @@ While the instruction regarding Gen-Z slang in the comments was noted, the autho
 ## TODO
 
 - verify all tests
-- add code coverage
 - generate additional sample data
+- what happens if marksAvailable increases while marksObtained decreases (or vice versa)? 

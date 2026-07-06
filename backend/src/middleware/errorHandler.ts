@@ -39,3 +39,15 @@ export const errorHandler = (
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };
+
+/**
+ * Wraps an async route handler to forward errors to the error middleware.
+ * This prevents unhandled promise rejections from escaping the request handler.
+ */
+export const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};

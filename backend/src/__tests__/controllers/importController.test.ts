@@ -23,9 +23,9 @@ test('normalizeResult returns normalized structured result for valid XML object'
       '@_obtained': '13',
     },
     answer: {
-      '@_question': '1',
-      '@_marks-available': '1',
-      '@_marks-awarded': '1',
+      'question': '1',
+      'marks-available': '1',
+      'marks-awarded': '1',
       '#text': 'A',
     },
   };
