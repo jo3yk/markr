@@ -49,30 +49,30 @@ The solution is split into two parts:
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 22+ and npm
 - Docker and Docker Compose (optional, for the containerized workflow)
 
 ### Backend
 
 ```bash
-cd markr/backend
+cd backend
 npm install
 npm run build
 npm start
 ```
 
-The backend listens on port 4567.
+The backend listens on port 4000.
 
 ### Frontend
 
 ```bash
-cd markr/frontend
+cd frontend
 npm install
 npm run build
 npm run dev
 ```
 
-The frontend is served on port 3000 in development mode.
+The frontend is served on port 5173 in development mode.
 
 ### Docker Compose
 
@@ -93,12 +93,12 @@ The initial implementation is straightforward and should be sufficient for the M
 ## Testing
 
 ```bash
-cd markr/backend
+cd backend
 npm test
 ```
 
 ```bash
-cd markr/frontend
+cd frontend
 npm test
 ```
 
