@@ -186,7 +186,7 @@ export default function TestDetailPage() {
                               style={{ width: isEmpty ? '0.5rem' : width }}
                               aria-label={`${bin.count} student${bin.count === 1 ? '' : 's'} scored between ${bin.lower_pct} and ${bin.upper_pct} percent`}
                             />
-                            <span className="histogram-count-label" >
+                            <span className="histogram-count-label" aria-hidden="true">
                               {bin.count}
                             </span>
                           </div>
