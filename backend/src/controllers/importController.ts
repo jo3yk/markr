@@ -141,7 +141,6 @@ export class JasperImporter {
           continue;
         }
 
-        // TODO: check this logic
         const shouldUpdate =
           result.marksObtained > existing.marksObtained ||
           result.marksAvailable > existing.marksAvailable;
