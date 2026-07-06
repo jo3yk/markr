@@ -13,6 +13,7 @@ export default function TestDetailPage() {
   const [detailAnnouncement, setDetailAnnouncement] = useState<string | null>(null);
   const detailVersionRef = useRef<string | null>(null);
   const detailIntervalRef = useRef<number | null>(null);
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
     if (!testId) {
@@ -20,17 +21,29 @@ export default function TestDetailPage() {
       return;
     }
 
+    // Reset cancellation flag for new testId
+    cancelledRef.current = false;
     setDetailLoading(true);
     setDetailError(null);
     setDetailAnnouncement(null);
     detailVersionRef.current = null;
 
     const fetchDetail = async (announce = false) => {
+      // Check if this request has been cancelled before making API calls
+      if (cancelledRef.current) {
+        return;
+      }
+
       try {
         const [aggBody, histogramBody] = await Promise.all([
           fetchAggregate(testId),
           fetchHistogram(testId),
         ]);
+
+        // Guard all setState calls - check if still valid after async operations
+        if (cancelledRef.current) {
+          return;
+        }
 
         const newVersion = JSON.stringify({ aggBody, histogramBody });
         if (announce && detailVersionRef.current && detailVersionRef.current !== newVersion) {
@@ -41,12 +54,19 @@ export default function TestDetailPage() {
         setHistogram(histogramBody);
         setDetailLastRefreshed(new Date().toLocaleTimeString());
       } catch (err) {
+        // Guard setState in catch block
+        if (cancelledRef.current) {
+          return;
+        }
         setDetailError(err instanceof Error ? err.message : 'Unable to load test details');
         setAggregate(null);
         setHistogram(null);
         setDetailLastRefreshed(null);
       } finally {
-        setDetailLoading(false);
+        // Guard setState in finally block
+        if (!cancelledRef.current) {
+          setDetailLoading(false);
+        }
       }
     };
 
@@ -58,6 +78,8 @@ export default function TestDetailPage() {
     detailIntervalRef.current = window.setInterval(() => fetchDetail(true), 10000);
 
     return () => {
+      // Set cancellation flag to prevent stale state updates
+      cancelledRef.current = true;
       if (detailIntervalRef.current) {
         window.clearInterval(detailIntervalRef.current);
         detailIntervalRef.current = null;

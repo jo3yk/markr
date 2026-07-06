@@ -10,5 +10,7 @@ Node + Express + TypeScript + Sequelize (SQLite)
 
 ## Endpoints
 
-GET /api/users
-POST /api/users
+GET /tests
+GET /results/:testId/aggregate
+GET /results/:testId/histogram
+POST /import

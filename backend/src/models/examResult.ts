@@ -1,7 +1,7 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize';
+import { DataTypes, CreationOptional, InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize';
 
 export class ExamResult extends Model<InferAttributes<ExamResult>, InferCreationAttributes<ExamResult>> {
-  public id!: number;
+  public id!: CreationOptional<number>;
   public testId!: string;
   public studentNumber!: string;
   public firstName!: string;

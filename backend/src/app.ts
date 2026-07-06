@@ -4,6 +4,7 @@ import resultsRoutes from './routes/resultsRoutes';
 import testsRoutes from './routes/testsRoutes';
 import helmet from 'helmet';
 import cors from 'cors';
+import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
@@ -16,7 +17,7 @@ app.use(helmet());
 
 // 2. Configure and enable Cross-Origin Resource Sharing
 const corsOptions = {
-  origin: 'http://localhost:5173', 
+  origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173', 
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
@@ -28,5 +29,8 @@ app.get('/', (_req, res) => {
 app.use('/import', importRoutes);
 app.use('/results', resultsRoutes);
 app.use('/tests', testsRoutes);
+
+// Centralized error-handling middleware (must be after all routes)
+app.use(errorHandler);
 
 export default app;

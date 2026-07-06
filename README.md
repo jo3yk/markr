@@ -111,3 +111,4 @@ While the instruction regarding Gen-Z slang in the comments was noted, the autho
 - docker-compose
 - verify all tests
 - add code coverage
+- generate additional sample data

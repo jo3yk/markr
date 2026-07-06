@@ -1,4 +1,4 @@
-import { ExamResult } from '../models';
+import { ExamResult, sequelize } from '../models';
 import { markrXmlParser } from '../services/xmlParser';
 
 export interface NormalizedAnswer {
@@ -30,6 +30,12 @@ export class JasperImporter {
     if (!result) return null;
 
     const scannedOn = result['scanned-on'];
+
+    const parsedScannedOn = new Date(scannedOn);
+    if (Number.isNaN(parsedScannedOn.getDate())) {
+      return null;
+    }
+
     const firstName = result['first-name'];
     const lastName = result['last-name'];
     const studentNumber = result['student-number'];
@@ -66,7 +72,7 @@ export class JasperImporter {
     });
 
     return {
-      scannedOn: new Date(scannedOn),
+      scannedOn: parsedScannedOn,
       firstName: String(firstName),
       lastName: String(lastName),
       studentNumber: String(studentNumber),
@@ -111,45 +117,49 @@ export class JasperImporter {
     const validResults = JasperImporter.parseMarkrXml(xml);
     let imported = 0;
 
-    // Each record is treated as an upsert so rescans can replace weaker scores without duplication.
-    for (const result of validResults) {
-      const [existing, created] = await ExamResult.findOrCreate({
-        where: {
-          testId: result.testId,
-          studentNumber: result.studentNumber,
-        },
-        defaults: {
-          testId: result.testId,
-          studentNumber: result.studentNumber,
-          firstName: result.firstName,
-          lastName: result.lastName,
-          scannedOn: result.scannedOn,
-          marksAvailable: result.marksAvailable,
-          marksObtained: result.marksObtained,
-        },
-      });
+    // Wrap all database operations in a transaction for atomicity
+    await sequelize.transaction(async (t) => {
+      // Each record is treated as an upsert so rescans can replace weaker scores without duplication.
+      for (const result of validResults) {
+        const [existing, created] = await ExamResult.findOrCreate({
+          where: {
+            testId: result.testId,
+            studentNumber: result.studentNumber,
+          },
+          defaults: {
+            testId: result.testId,
+            studentNumber: result.studentNumber,
+            firstName: result.firstName,
+            lastName: result.lastName,
+            scannedOn: result.scannedOn,
+            marksAvailable: result.marksAvailable,
+            marksObtained: result.marksObtained,
+          },
+          transaction: t,
+        });
 
-      if (created) {
+        if (created) {
+          imported += 1;
+          continue;
+        }
+
+        // TODO: check this logic
+        const shouldUpdate =
+          result.marksObtained > existing.marksObtained ||
+          result.marksAvailable > existing.marksAvailable;
+
+        if (shouldUpdate) {
+          existing.marksObtained = Math.max(existing.marksObtained, result.marksObtained);
+          existing.marksAvailable = Math.max(existing.marksAvailable, result.marksAvailable);
+          existing.scannedOn = new Date(Math.max(result.scannedOn.getTime(), existing.scannedOn.getTime()));
+          existing.firstName = result.firstName;
+          existing.lastName = result.lastName;
+          await existing.save({ transaction: t });
+        }
+
         imported += 1;
-        continue;
       }
-
-      // TODO: check this logic
-      const shouldUpdate =
-        result.marksObtained > existing.marksObtained ||
-        result.marksAvailable > existing.marksAvailable;
-
-      if (shouldUpdate) {
-        existing.marksObtained = Math.max(existing.marksObtained, result.marksObtained);
-        existing.marksAvailable = Math.max(existing.marksAvailable, result.marksAvailable);
-        existing.scannedOn = new Date(Math.max(result.scannedOn.getTime(), existing.scannedOn.getTime()));
-        existing.firstName = result.firstName;
-        existing.lastName = result.lastName;
-        await existing.save();
-      }
-
-      imported += 1;
-    }
+    });
 
     return imported;
   }

@@ -1,10 +1,10 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize';
+import { DataTypes, CreationOptional, InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize';
 
 // This model isn't currently used - from the readme: "you can safely ignore the `<answer>` elements"
 // so we won't be using them in the import process. However, we will still define the model for completeness.
 
 export class Answer extends Model<InferAttributes<Answer>, InferCreationAttributes<Answer>>  {
-  public id!: number;
+  public id!: CreationOptional<number>;
   public examResultId!: number;
   public question!: number;
   public marksAvailable!: number;
