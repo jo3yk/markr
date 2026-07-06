@@ -17,10 +17,11 @@ This project delivers a small end-to-end Markr MVP with:
 
 - The XML payloads are in the Markr-specific format described in the task brief.
 - The backend should trust the provided summary-marks values for scoring and availability.
-- If the same student is imported more than once, the system keeps the best score for that student and the highest available marks seen for that test.
+- If the same student/test is imported more than once, the system keeps the best score for that student and the highest available marks seen for that test.
 - A document is accepted only if every record inside it is valid; invalid input causes the whole import to fail and return a 400 response.
 - The frontend should be accessible, with clear status/error announcements and a live-updating detail view.
 - There is no requirement for authentication.
+- XML file size limit of 1mb
 
 ## Approach
 
@@ -61,7 +62,7 @@ npm run build
 npm start
 ```
 
-The backend listens on port 4000.
+The backend listens on port 4000 by default.
 
 ### Frontend
 
@@ -110,4 +111,3 @@ While the instruction regarding Gen-Z slang in the comments was noted, the autho
 
 - verify all tests
 - generate additional sample data
-- what happens if marksAvailable increases while marksObtained decreases (or vice versa)? 

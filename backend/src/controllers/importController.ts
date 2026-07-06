@@ -46,10 +46,8 @@ export class JasperImporter {
       return null;
     }
 
-    // The legacy XML can encode summary values under either attribute style, so support both.
-    // TODO: confirm this assumption
-    const available = Number(summaryMarks['@_available'] ?? summaryMarks['available']);
-    const obtained = Number(summaryMarks['@_obtained'] ?? summaryMarks['obtained']);
+    const available = Number(summaryMarks['available']);
+    const obtained = Number(summaryMarks['obtained']);
 
     if (!Number.isFinite(available) || !Number.isFinite(obtained)) {
       return null;

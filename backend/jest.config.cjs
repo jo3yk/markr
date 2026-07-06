@@ -4,7 +4,7 @@ module.exports = {
   },
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.test.ts'],
-  collectCoverage: true,
+  collectCoverage: false,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   collectCoverageFrom: [

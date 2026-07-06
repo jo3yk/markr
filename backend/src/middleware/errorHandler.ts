@@ -25,7 +25,7 @@ export const errorHandler = (
     return next(err);
   }
 
-  const statusCode = err instanceof MarkrError ? err.statusCode : 500;
+  const statusCode = err instanceof MarkrError ? err.statusCode : 400; // Per the spec, return a 400 on any kind of error (even if it should be a 5xx)
   const responseMessage = err instanceof MarkrError ? err.message : 'Internal Server Error';
 
   // Log the error for server-side visibility (TODO: proper logging for production)
