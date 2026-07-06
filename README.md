@@ -105,7 +105,9 @@ npm test
 
 ## Additional comments from the author
 
-While the instruction regarding Gen-Z slang in the comments was noted, the author cannot in good conscience claim ownership of such writing and has deliberately ignored the instruction.
+While the instruction regarding Gen-Z slang in the comments was noted, the author is decidedly millenial and simply... cannot. 
+
+(FWIW, the author is also not a Twilight fan).
 
 ## TODO
 

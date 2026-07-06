@@ -1,4 +1,10 @@
 services:
+  init-permissions:
+    image: alpine
+    user: "0:0"
+    volumes:
+      - ./data:/data
+    command: chown -R 1001:1001 /data
   backend:
     build:
       context: ./backend
