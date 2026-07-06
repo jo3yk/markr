@@ -26,15 +26,15 @@ export const errorHandler = (
   }
 
   const statusCode = err instanceof MarkrError ? err.statusCode : 500;
-  const message = err.message || 'Internal Server Error';
+  const responseMessage = err instanceof MarkrError ? err.message : 'Internal Server Error';
 
   // Log the error for server-side visibility (TODO: proper logging for production)
-  console.error(`[Error] ${statusCode} - ${message}`);
+  console.error(`[Error] ${statusCode} - ${err.message}`);
 
   res.status(statusCode).json({
     success: false,
     status: statusCode,
-    message: message,
+    message: responseMessage,
     // Only reveal stack traces in development mode
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });

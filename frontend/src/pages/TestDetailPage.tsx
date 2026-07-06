@@ -46,13 +46,14 @@ export default function TestDetailPage() {
         }
 
         const newVersion = JSON.stringify({ aggBody, histogramBody });
+        const refreshed = new Date().toLocaleTimeString();
         if (announce && detailVersionRef.current && detailVersionRef.current !== newVersion) {
-          setDetailAnnouncement(`Results updated for test ${testId}`);
+          setDetailAnnouncement(`Results updated for test ${testId} at ${refreshed}`);
         }
         detailVersionRef.current = newVersion;
         setAggregate(aggBody);
         setHistogram(histogramBody);
-        setDetailLastRefreshed(new Date().toLocaleTimeString());
+        setDetailLastRefreshed(refreshed);
       } catch (err) {
         // Guard setState in catch block
         if (cancelledRef.current) {
