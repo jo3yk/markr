@@ -1,0 +1,16 @@
+node_modules
+dist
+*.tsbuildinfo
+.git
+.gitignore
+*.log
+npm-debug.log*
+Dockerfile
+docker-compose.yml
+__tests__
+vitest.config.ts
+*.test.ts
+*.spec.ts
+.env
+coverage
+.nyc_output

@@ -80,7 +80,7 @@ The frontend is served on port 5173 in development mode.
 docker compose up --build
 ```
 
-This is intended to bring up the backend and frontend together from the repository root.
+This brings up the backend and frontend together from the repository root. The frontend can be accessed at http://localhost:3000, with the backend on port 4567.
 
 ## Performance notes
 
@@ -108,7 +108,6 @@ While the instruction regarding Gen-Z slang in the comments was noted, the autho
 
 ## TODO
 
-- docker-compose
 - verify all tests
 - add code coverage
 - generate additional sample data

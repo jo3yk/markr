@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize';
 import { ExamResultFactory } from './examResult';
 import { AnswerFactory } from './answer';
 
-const storage = process.env.DATABASE_STORAGE ?? './database.sqlite';
+const storage = process.env.DATABASE_STORAGE ?? './data/database.sqlite';
 
 export const sequelize = new Sequelize({
   dialect: 'sqlite',
