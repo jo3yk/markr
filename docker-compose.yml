@@ -10,7 +10,7 @@ services:
       - ./data:/data:rw
     environment:
       - PORT=4000
-      - DATABASE_STORAGE=./data/database.sqlite
+      - DATABASE_STORAGE=/data/database.sqlite
       - CORS_ORIGIN=http://localhost:3000
     restart: unless-stopped
     networks:
