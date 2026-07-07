@@ -116,15 +116,6 @@ export class JasperImporter {
     const validResults = JasperImporter.parseMarkrXml(xml);
     let imported = 0;
 
-    const students = new Set(validResults.map(r => new Student({ studentNumber: r['studentNumber'], firstName: r['firstName'], lastName: r['lastName'] })));
-    const exams = Object.values(validResults.map(r => new Exam({ testId: r['testId'], marksAvailable: r['marksAvailable'] }))
-      .reduce<Record<string, any>>((acc, obj) => {
-        if (!acc[obj.testId] || obj.marksAvailable > acc[obj.testId].marksAvailable) {
-          acc[obj.testId] = obj;
-        }
-        return acc;
-      }, {}));
-
     // Wrap all database operations in a transaction for atomicity
     await sequelize.transaction(async (t) => {
       // Each record is treated as an upsert so rescans can replace weaker scores without duplication.
