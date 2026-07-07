@@ -1,4 +1,5 @@
-import { ExamResult, sequelize } from '../models';
+import { MarkrError } from '../middleware/errorHandler';
+import { Exam, ExamResult, sequelize, Student } from '../models';
 import { markrXmlParser } from '../services/xmlParser';
 
 export interface NormalizedAnswer {
@@ -115,43 +116,75 @@ export class JasperImporter {
     const validResults = JasperImporter.parseMarkrXml(xml);
     let imported = 0;
 
+    const students = new Set(validResults.map(r => new Student({ studentNumber: r['studentNumber'], firstName: r['firstName'], lastName: r['lastName'] })));
+    const exams = Object.values(validResults.map(r => new Exam({ testId: r['testId'], marksAvailable: r['marksAvailable'] }))
+      .reduce<Record<string, any>>((acc, obj) => {
+        if (!acc[obj.testId] || obj.marksAvailable > acc[obj.testId].marksAvailable) {
+          acc[obj.testId] = obj;
+        }
+        return acc;
+      }, {}));
+
     // Wrap all database operations in a transaction for atomicity
     await sequelize.transaction(async (t) => {
       // Each record is treated as an upsert so rescans can replace weaker scores without duplication.
       for (const result of validResults) {
-        const [existing, created] = await ExamResult.findOrCreate({
+        const [student, createdStudent] = await Student.findOrCreate({
           where: {
-            testId: result.testId,
-            studentNumber: result.studentNumber,
+            studentNumber: result.studentNumber
           },
           defaults: {
-            testId: result.testId,
             studentNumber: result.studentNumber,
             firstName: result.firstName,
             lastName: result.lastName,
-            scannedOn: result.scannedOn,
+          },
+          transaction: t
+        })
+
+        if (student && (student.firstName !== result.firstName || student.lastName !== result.lastName)) {
+          throw new MarkrError(`Invalid student data - inconsistent name data for student number ${result.studentNumber}`, 400)
+        }
+
+        const [exam, createdExam] = await Exam.findOrCreate({
+          where: {
+            testId: result.testId,
+          },
+          defaults: {
+            testId: result.testId,
             marksAvailable: result.marksAvailable,
+          },
+          transaction: t
+        })
+
+        if (exam && result.marksAvailable > exam.marksAvailable) {
+          exam.marksAvailable = result.marksAvailable;
+          await exam.save({ transaction: t })
+        }
+
+
+        const [examResult, createdResult] = await ExamResult.findOrCreate({
+          where: {
+            examId: exam.id,
+            studentId: student.id
+          },
+          defaults: {
+            examId: exam.id,
+            studentId: student.id,
+            scannedOn: result.scannedOn,
             marksObtained: result.marksObtained,
           },
           transaction: t,
         });
 
-        if (created) {
+        if (createdResult) {
           imported += 1;
           continue;
         }
 
-        const shouldUpdate =
-          result.marksObtained > existing.marksObtained ||
-          result.marksAvailable > existing.marksAvailable;
-
-        if (shouldUpdate) {
-          existing.marksObtained = Math.max(existing.marksObtained, result.marksObtained);
-          existing.marksAvailable = Math.max(existing.marksAvailable, result.marksAvailable);
-          existing.scannedOn = new Date(Math.max(result.scannedOn.getTime(), existing.scannedOn.getTime()));
-          existing.firstName = result.firstName;
-          existing.lastName = result.lastName;
-          await existing.save({ transaction: t });
+        if (result.marksObtained > examResult.marksObtained) {
+          examResult.marksObtained = result.marksObtained;
+          examResult.scannedOn = result.scannedOn;
+          await examResult.save({ transaction: t });
         }
 
         imported += 1;

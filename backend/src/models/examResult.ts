@@ -2,12 +2,9 @@ import { DataTypes, CreationOptional, InferAttributes, InferCreationAttributes, 
 
 export class ExamResult extends Model<InferAttributes<ExamResult>, InferCreationAttributes<ExamResult>> {
   public id!: CreationOptional<number>;
-  public testId!: string;
-  public studentNumber!: string;
-  public firstName!: string;
-  public lastName!: string;
+  public examId!: number;
+  public studentId!: number;
   public scannedOn!: Date;
-  public marksAvailable!: number;
   public marksObtained!: number;
 }
 
@@ -16,32 +13,20 @@ export function ExamResultFactory(sequelize: Sequelize) {
   ExamResult.init(
     {
       id: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
       },
-      testId: {
-        type: DataTypes.STRING(128),
+      examId: {
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
-      studentNumber: {
-        type: DataTypes.STRING(64),
-        allowNull: false,
-      },
-      firstName: {
-        type: DataTypes.STRING(128),
-        allowNull: false,
-      },
-      lastName: {
-        type: DataTypes.STRING(128),
+      studentId: {
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       scannedOn: {
         type: DataTypes.DATE,
-        allowNull: false,
-      },
-      marksAvailable: {
-        type: DataTypes.INTEGER,
         allowNull: false,
       },
       marksObtained: {
@@ -52,13 +37,7 @@ export function ExamResultFactory(sequelize: Sequelize) {
     {
       sequelize,
       tableName: 'exam_results',
-      timestamps: true,
-      indexes: [
-        {
-          unique: true,
-          fields: ['testId', 'studentNumber'],
-        },
-      ],
+      timestamps: true
     }
   );
 

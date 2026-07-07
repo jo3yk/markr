@@ -1,4 +1,4 @@
-import { sequelize, ExamResult } from '../models';
+import { sequelize, ExamResult, Exam } from '../models';
 
 function quantile(sorted: number[], q: number) {
   if (sorted.length === 0) return 0;
@@ -33,14 +33,23 @@ function buildHistogram(percentages: number[]) {
 
 function mapPercentages(results: any[]) {
   return results.map((result) => {
-    if (result.marksAvailable === 0) return 0;
-    return (result.marksObtained / result.marksAvailable) * 100;
+    if (result['exam.marksAvailable'] === 0) return 0;
+    return (result.marksObtained / result['exam.marksAvailable']) * 100;
   });
 }
 
 export class EsmeAggregator {
   static async fetchResultsForTest(testId: string) {
-    return ExamResult.findAll({ where: { testId }, raw: true });
+    return ExamResult.findAll({
+      include: [{
+        model: Exam,
+        as: 'exam',
+        where: {
+          testId
+        }
+      }]
+      , raw: true
+    });
   }
 
   static async aggregateTestResults(testId: string) {
@@ -64,7 +73,7 @@ export class EsmeAggregator {
       p50: roundValue(quantile(sorted, 0.5)),
       p75: roundValue(quantile(sorted, 0.75)),
       count,
-    }; 
+    };
   }
 
   static async histogramTestResults(testId: string) {
@@ -76,21 +85,27 @@ export class EsmeAggregator {
 }
 
 export async function listTests() {
-  // Group by test to expose the landing-page summary data without iterating in application code.
-  const tests = await ExamResult.findAll({
+  const tests = await Exam.findAll({
     attributes: [
-      ['testId', 'test_id'],
-      [sequelize.fn('COUNT', sequelize.col('id')), 'student_count'],
-      [sequelize.fn('MAX', sequelize.col('marksAvailable')), 'marks_available'],
+      'testId',
+      'marksAvailable',
+      [sequelize.fn('COUNT', sequelize.col('examResults.studentId')), 'studentCount']
+    ],
+    include: [
+      {
+        model: ExamResult,
+        as: 'examResults',
+        attributes: []
+      }
     ],
     group: ['testId'],
     order: [['testId', 'ASC']],
-    raw: true,
-  });
+    raw: true
+  })
 
   return tests.map((test: any) => ({
-    test_id: test.test_id,
-    student_count: Number(test.student_count),
-    marks_available: Number(test.marks_available),
+    test_id: test.testId,
+    student_count: Number(test.studentCount),
+    marks_available: Number(test.marksAvailable),
   }));
 }

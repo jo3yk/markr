@@ -17,7 +17,9 @@ This project delivers a small end-to-end Markr MVP with:
 
 - The XML payloads are in the Markr-specific format described in the task brief.
 - The backend should trust the provided summary-marks values for scoring and availability.
-- If the same student/test is imported more than once, the system keeps the best score for that student and the highest available marks seen for that test.
+- If the same student/test is imported more than once, the system keeps the best score for that student
+- If the same test is imported more than once, the system keeps the highest available marks seen for that test (across all students).
+- If the same student number is imported more than once with different firstName/lastName, the import fails with a 400 response.
 - A document is accepted only if every record inside it is valid; invalid input causes the whole import to fail and return a 400 response.
 - The frontend should be accessible, with clear status/error announcements and a live-updating detail view.
 - There is no requirement for authentication.

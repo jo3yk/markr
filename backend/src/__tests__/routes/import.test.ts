@@ -3,7 +3,7 @@ process.env.DATABASE_STORAGE = ':memory:';
 
 import request from 'supertest';
 import app from '../../app';
-import { sequelize, ExamResult } from '../../models';
+import { sequelize, ExamResult, Student, Exam } from '../../models';
 
 beforeEach(async () => {
   await sequelize.sync({ force: true });
@@ -61,10 +61,28 @@ test('duplicates in a single request keep the highest marks and available', asyn
   expect(res.status).toBe(200);
   expect(res.body).toHaveProperty('imported', 2);
 
-  const row = await ExamResult.findOne({ where: { studentNumber: 'ABC123', testId: '555' } });
+  const row = await ExamResult.findOne({ 
+    include: [
+      {
+        model: Student,
+        as: 'student',
+        where: {
+          studentNumber: 'ABC123'
+        }
+      },
+      {
+        model: Exam,
+        as: 'exam',
+        where: {
+          testId: '555'
+        }
+      }
+    ],
+    raw: true
+  });
   expect(row).not.toBeNull();
   expect(row!.marksObtained).toBe(12);
-  expect(row!.marksAvailable).toBe(22);
+  expect((row as any)['exam.marksAvailable']).toBe(22);
 });
 
 test('duplicates across multiple requests keep the highest values', async () => {
@@ -98,10 +116,28 @@ test('duplicates across multiple requests keep the highest values', async () => 
   expect(r2.status).toBe(200);
   expect(r2.body).toHaveProperty('imported', 1);
 
-  const row = await ExamResult.findOne({ where: { studentNumber: 'X1', testId: '999' } });
+  const row = await ExamResult.findOne({ 
+    include: [
+      {
+        model: Student,
+        as: 'student',
+        where: {
+          studentNumber: 'X1'
+        }
+      },
+      {
+        model: Exam,
+        as: 'exam',
+        where: {
+          testId: '999'
+        }
+      }
+    ],
+    raw: true
+  });
   expect(row).not.toBeNull();
   expect(row!.marksObtained).toBe(15);
-  expect(row!.marksAvailable).toBe(21);
+  expect((row as any)['exam.marksAvailable']).toBe(21);
 });
 
 test('reject entire document when a result is missing required fields', async () => {
@@ -127,6 +163,51 @@ test('reject entire document when a result is missing required fields', async ()
   expect(res.status).toBe(400);
   expect(res.body).toHaveProperty('error');
 
-  const rows = await ExamResult.findAll({ where: { testId: '111' } });
+  const rows = await ExamResult.findAll({ 
+    include: [{
+      model: Exam,
+      as: 'exam',
+      where: {
+        testId: '111'
+      }}
+    ],
+    raw: true 
+  });
   expect(rows.length).toBe(0);
 });
+
+test('Inconsistent student names are rejected', async () => {
+  const xml = `<?xml version="1.0"?>
+  <mcq-test-results>
+    <mcq-test-result scanned-on="2017-12-04T12:12:10+11:00">
+      <first-name>Dup</first-name>
+      <last-name>User</last-name>
+      <student-number>ABC123</student-number>
+      <test-id>555</test-id>
+      <summary-marks available="20" obtained="8" />
+    </mcq-test-result>
+    <mcq-test-result scanned-on="2017-12-04T12:13:10+11:00">
+      <first-name>Different</first-name>
+      <last-name>User</last-name>
+      <student-number>ABC123</student-number>
+      <test-id>555</test-id>
+      <summary-marks available="22" obtained="12" />
+    </mcq-test-result>
+  </mcq-test-results>`;
+
+  const res = await request(app).post('/import').set('Content-Type', 'text/xml+markr').send(xml);
+  expect(res.status).toBe(400);
+  expect(res.body).toHaveProperty('error');
+
+  const rows = await ExamResult.findAll({ 
+    include: [{
+      model: Exam,
+      as: 'exam',
+      where: {
+        testId: '555'
+      }}
+    ],
+    raw: true 
+  });
+  expect(rows.length).toBe(0);
+})
