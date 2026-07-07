@@ -1,0 +1,41 @@
+services:
+  init-permissions:
+    image: alpine
+    user: "0:0"
+    volumes:
+      - ./data:/data
+    command: chown -R 1001:1001 /data
+  backend:
+    build:
+      context: ./backend
+      target: production
+    container_name: markr-api
+    ports:
+      - "4567:4000"
+    volumes:
+      - ./data:/data:rw
+    environment:
+      - PORT=4000
+      - DATABASE_STORAGE=/data/database.sqlite
+      - CORS_ORIGIN=http://localhost:3000
+    restart: unless-stopped
+    networks:
+      - markr-network
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+      args:
+        API_BASE: "http://localhost:4567"
+    container_name: markr-ui
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    networks:
+      - markr-network
+    depends_on:
+      - backend
+
+networks:
+  markr-network:
