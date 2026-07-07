@@ -13,6 +13,41 @@ afterAll(async () => {
   await sequelize.close();
 });
 
+async function getStoredResult(studentNumber: string, testId: string) {
+  return ExamResult.findOne({ 
+    include: [
+      {
+        model: Student,
+        as: 'student',
+        where: {
+          studentNumber
+        }
+      },
+      {
+        model: Exam,
+        as: 'exam',
+        where: {
+          testId
+        }
+      }
+    ],
+    raw: true
+  });
+}
+
+async function getAllStoredResults(testId: string) {
+  return ExamResult.findAll({ 
+    include: [{
+      model: Exam,
+      as: 'exam',
+      where: {
+        testId
+      }}
+    ],
+    raw: true 
+  });
+}
+
 test('POST /import accepts valid XML and returns imported count', async () => {
   const xml = `<?xml version="1.0"?>
   <mcq-test-results>
@@ -61,25 +96,7 @@ test('duplicates in a single request keep the highest marks and available', asyn
   expect(res.status).toBe(200);
   expect(res.body).toHaveProperty('imported', 2);
 
-  const row = await ExamResult.findOne({ 
-    include: [
-      {
-        model: Student,
-        as: 'student',
-        where: {
-          studentNumber: 'ABC123'
-        }
-      },
-      {
-        model: Exam,
-        as: 'exam',
-        where: {
-          testId: '555'
-        }
-      }
-    ],
-    raw: true
-  });
+  const row = await getStoredResult('ABC123', '555');
   expect(row).not.toBeNull();
   expect(row!.marksObtained).toBe(12);
   expect((row as any)['exam.marksAvailable']).toBe(22);
@@ -116,25 +133,7 @@ test('duplicates across multiple requests keep the highest values', async () => 
   expect(r2.status).toBe(200);
   expect(r2.body).toHaveProperty('imported', 1);
 
-  const row = await ExamResult.findOne({ 
-    include: [
-      {
-        model: Student,
-        as: 'student',
-        where: {
-          studentNumber: 'X1'
-        }
-      },
-      {
-        model: Exam,
-        as: 'exam',
-        where: {
-          testId: '999'
-        }
-      }
-    ],
-    raw: true
-  });
+  const row = await getStoredResult('X1', '999');
   expect(row).not.toBeNull();
   expect(row!.marksObtained).toBe(15);
   expect((row as any)['exam.marksAvailable']).toBe(21);
@@ -163,16 +162,7 @@ test('reject entire document when a result is missing required fields', async ()
   expect(res.status).toBe(400);
   expect(res.body).toHaveProperty('error');
 
-  const rows = await ExamResult.findAll({ 
-    include: [{
-      model: Exam,
-      as: 'exam',
-      where: {
-        testId: '111'
-      }}
-    ],
-    raw: true 
-  });
+  const rows = await getAllStoredResults('111');
   expect(rows.length).toBe(0);
 });
 
@@ -199,15 +189,6 @@ test('Inconsistent student names are rejected', async () => {
   expect(res.status).toBe(400);
   expect(res.body).toHaveProperty('error');
 
-  const rows = await ExamResult.findAll({ 
-    include: [{
-      model: Exam,
-      as: 'exam',
-      where: {
-        testId: '555'
-      }}
-    ],
-    raw: true 
-  });
+  const rows = await getAllStoredResults('555');
   expect(rows.length).toBe(0);
 })

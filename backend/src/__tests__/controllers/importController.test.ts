@@ -11,6 +11,16 @@ afterAll(async () => {
   await sequelize.close();
 });
 
+async function getStoredResult(studentNumber: string, testId: string) {
+  return ExamResult.findOne({
+    include: [
+      { model: Student, as: 'student', where: { studentNumber } },
+      { model: Exam, as: 'exam', where: { testId } },
+    ],
+    raw: true,
+  });
+}
+
 test('normalizeResult returns normalized structured result for valid XML object', () => {
   const raw = {
     'scanned-on': '2024-01-01T00:00:00Z',
@@ -94,22 +104,7 @@ test('importResults stores records and keeps the highest available for duplicate
   const imported = await JasperImporter.importResults(xml);
   expect(imported).toBe(2);
 
-  const stored = await ExamResult.findOne({
-    include: [{
-      model: Student,
-      as: 'student',
-      where: {
-        studentNumber: '521585128'
-      }
-    }, {
-      model: Exam,
-      as: 'exam',
-      where: {
-        testId: '1234'
-      }
-    }],
-    raw: true
-  });
+  const stored = await getStoredResult('521585128', '1234');
 
   expect(stored).not.toBeNull();
   expect(stored?.marksObtained).toBe(17);
@@ -139,22 +134,7 @@ test('importResults stores records and keeps the highest obtained for duplicate 
   const imported = await JasperImporter.importResults(xml);
   expect(imported).toBe(2);
 
-  const stored = await ExamResult.findOne({
-    include: [{
-      model: Student,
-      as: 'student',
-      where: {
-        studentNumber: '521585128'
-      }
-    }, {
-      model: Exam,
-      as: 'exam',
-      where: {
-        testId: '1234'
-      }
-    }],
-    raw: true
-  })
+  const stored = await getStoredResult('521585128', '1234');
 
   expect(stored).not.toBeNull();
   expect(stored?.marksObtained).toBe(17);
@@ -184,22 +164,7 @@ test('importResults stores records and keeps the highest obtained for duplicate 
   const imported = await JasperImporter.importResults(xml);
   expect(imported).toBe(2);
 
-  const stored = await ExamResult.findOne({
-    include: [{
-      model: Student,
-      as: 'student',
-      where: {
-        studentNumber: '521585128'
-      }
-    }, {
-      model: Exam,
-      as: 'exam',
-      where: {
-        testId: '1234'
-      }
-    }],
-    raw: true
-  });
+  const stored = await getStoredResult('521585128', '1234');
   
   expect(stored).not.toBeNull();
   expect(stored?.marksObtained).toBe(17);
@@ -229,23 +194,8 @@ test('importResults stores records and keeps the highest available for duplicate
   const imported = await JasperImporter.importResults(xml);
   expect(imported).toBe(2);
 
-  const stored = await ExamResult.findOne({
-    include: [{
-      model: Student,
-      as: 'student',
-      where: {
-        studentNumber: '521585128'
-      }
-    }, {
-      model: Exam,
-      as: 'exam',
-      where: {
-        testId: '1234'
-      }
-    }],
-    raw: true
-  });
-  
+  const stored = await getStoredResult('521585128', '1234');
+
   expect(stored).not.toBeNull();
   expect(stored?.marksObtained).toBe(17);
   // included associations are available on the instance; cast to any for the test
