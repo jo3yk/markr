@@ -6,13 +6,7 @@ import app from '../../app';
 import { sequelize, ExamResult, Student, Exam } from '../../models';
 
 beforeAll(async () => {
-  try {
     await sequelize.sync({ force: true });
-  }
-  catch (err) {
-    console.log(err)
-  }
-  
 });
 
 afterAll(async () => {

@@ -37,7 +37,13 @@ export function ExamResultFactory(sequelize: Sequelize) {
     {
       sequelize,
       tableName: 'exam_results',
-      timestamps: true
+      timestamps: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['examId', 'studentId']
+        }
+      ]
     }
   );
 
