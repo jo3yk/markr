@@ -111,7 +111,4 @@ While the instruction regarding Gen-Z slang in the comments was noted, the autho
 
 (FWIW, the author is also not a Twilight fan).
 
-## TODO
 
-- verify all tests
-- generate additional sample data
