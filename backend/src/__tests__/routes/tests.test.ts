@@ -3,10 +3,10 @@ process.env.DATABASE_STORAGE = ':memory:';
 
 import request from 'supertest';
 import app from '../../app';
-import { sequelize, ExamResult } from '../../models';
+import { sequelize, ExamResult, Student, Exam } from '../../models';
 
 beforeAll(async () => {
-  await sequelize.sync({ force: true });
+    await sequelize.sync({ force: true });
 });
 
 afterAll(async () => {
@@ -14,32 +14,52 @@ afterAll(async () => {
 });
 
 test('GET /tests returns all known tests ordered by test_id', async () => {
+  const student1 = await Student.create({
+      studentNumber: 'S1',
+      firstName: 'A',
+      lastName: 'One'
+    });
+  
+    const student2 = await Student.create({
+      studentNumber: 'S2',
+      firstName: 'B',
+      lastName: 'Two'
+    });
+  
+    const student3 = await Student.create({
+      studentNumber: 'S3',
+      firstName: 'B',
+      lastName: 'Two'
+    });
+  
+    const exam1 = await Exam.create({
+      testId: '5678',
+      marksAvailable: 10
+    });
+
+    const exam2 = await Exam.create({
+      testId: '1234',
+      marksAvailable: 20
+    });
+
+  
   await ExamResult.bulkCreate([
     {
-      testId: '5678',
-      studentNumber: 'B1',
-      firstName: 'Test',
-      lastName: 'Two',
+      examId: exam1.id,
+      studentId: student1.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 10,
       marksObtained: 7,
     },
     {
-      testId: '1234',
-      studentNumber: 'A1',
-      firstName: 'Test',
-      lastName: 'One',
+      examId: exam2.id,
+      studentId: student2.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 20,
       marksObtained: 15,
     },
     {
-      testId: '1234',
-      studentNumber: 'A2',
-      firstName: 'Test',
-      lastName: 'Three',
+      examId: exam2.id,
+      studentId: student3.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 20,
       marksObtained: 13,
     },
   ]);

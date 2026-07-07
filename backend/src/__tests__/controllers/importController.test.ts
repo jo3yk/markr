@@ -1,19 +1,25 @@
 process.env.DATABASE_STORAGE = ':memory:';
 
-import { sequelize, ExamResult} from '../../models';
+import { sequelize, ExamResult, Student, Exam } from '../../models';
 import { JasperImporter } from '../../controllers/importController';
 
-beforeAll(async () => {
+beforeEach(async () => {
   await sequelize.sync({ force: true });
 });
-
-beforeEach(async() => {
-  await ExamResult.truncate()
-})
 
 afterAll(async () => {
   await sequelize.close();
 });
+
+async function getStoredResult(studentNumber: string, testId: string) {
+  return ExamResult.findOne({
+    include: [
+      { model: Student, as: 'student', where: { studentNumber } },
+      { model: Exam, as: 'exam', where: { testId } },
+    ],
+    raw: true,
+  });
+}
 
 test('normalizeResult returns normalized structured result for valid XML object', () => {
   const raw = {
@@ -98,10 +104,12 @@ test('importResults stores records and keeps the highest available for duplicate
   const imported = await JasperImporter.importResults(xml);
   expect(imported).toBe(2);
 
-  const stored = await ExamResult.findOne({ where: { testId: '1234', studentNumber: '521585128' }, raw: true });
+  const stored = await getStoredResult('521585128', '1234');
+
   expect(stored).not.toBeNull();
   expect(stored?.marksObtained).toBe(17);
-  expect(stored?.marksAvailable).toBe(23);
+  // included associations are available on the instance; cast to any for the test
+  expect((stored as any)['exam.marksAvailable']).toBe(23);
 });
 
 test('importResults stores records and keeps the highest obtained for duplicate student scans (same marks available)', async () => {
@@ -126,10 +134,12 @@ test('importResults stores records and keeps the highest obtained for duplicate 
   const imported = await JasperImporter.importResults(xml);
   expect(imported).toBe(2);
 
-  const stored = await ExamResult.findOne({ where: { testId: '1234', studentNumber: '521585128' }, raw: true });
+  const stored = await getStoredResult('521585128', '1234');
+
   expect(stored).not.toBeNull();
   expect(stored?.marksObtained).toBe(17);
-  expect(stored?.marksAvailable).toBe(20);
+  // included associations are available on the instance; cast to any for the test
+  expect((stored as any)['exam.marksAvailable']).toBe(20);
 });
 
 test('importResults stores records and keeps the highest obtained for duplicate student scans (higher marks available)', async () => {
@@ -154,10 +164,12 @@ test('importResults stores records and keeps the highest obtained for duplicate 
   const imported = await JasperImporter.importResults(xml);
   expect(imported).toBe(2);
 
-  const stored = await ExamResult.findOne({ where: { testId: '1234', studentNumber: '521585128' }, raw: true });
+  const stored = await getStoredResult('521585128', '1234');
+  
   expect(stored).not.toBeNull();
   expect(stored?.marksObtained).toBe(17);
-  expect(stored?.marksAvailable).toBe(24);
+  // included associations are available on the instance; cast to any for the test
+  expect((stored as any)['exam.marksAvailable']).toBe(24);
 });
 
 test('importResults stores records and keeps the highest available for duplicate student scans (higher marks obtained)', async () => {
@@ -182,8 +194,10 @@ test('importResults stores records and keeps the highest available for duplicate
   const imported = await JasperImporter.importResults(xml);
   expect(imported).toBe(2);
 
-  const stored = await ExamResult.findOne({ where: { testId: '1234', studentNumber: '521585128' }, raw: true });
+  const stored = await getStoredResult('521585128', '1234');
+
   expect(stored).not.toBeNull();
   expect(stored?.marksObtained).toBe(17);
-  expect(stored?.marksAvailable).toBe(25);
+  // included associations are available on the instance; cast to any for the test
+  expect((stored as any)['exam.marksAvailable']).toBe(25);
 });

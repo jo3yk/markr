@@ -3,7 +3,7 @@ process.env.DATABASE_STORAGE = ':memory:';
 
 import request from 'supertest';
 import app from '../../app';
-import { sequelize, ExamResult } from '../../models';
+import { sequelize, ExamResult, Student, Exam } from '../../models';
 
 beforeAll(async () => {
   await sequelize.sync({ force: true });
@@ -14,23 +14,34 @@ afterAll(async () => {
 });
 
 test('GET /results/:testId/aggregate returns correct summary percentages', async () => {
+  const student1 = await Student.create({
+      studentNumber: 'S1',
+      firstName: 'A',
+      lastName: 'One'
+    });
+  
+    const student2 = await Student.create({
+      studentNumber: 'S2',
+      firstName: 'B',
+      lastName: 'Two'
+    });
+  
+    const exam = await Exam.create({
+      testId: '1234',
+      marksAvailable: 20
+    });
+  
   await ExamResult.bulkCreate([
     {
-      testId: '1234',
-      studentNumber: 'A1',
-      firstName: 'Test',
-      lastName: 'One',
+      examId: exam.id,
+      studentId: student1.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 20,
       marksObtained: 13,
     },
     {
-      testId: '1234',
-      studentNumber: 'A2',
-      firstName: 'Test',
-      lastName: 'Two',
+      examId: exam.id,
+      studentId: student2.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 20,
       marksObtained: 15,
     },
   ]);

@@ -1,9 +1,9 @@
 process.env.DATABASE_STORAGE = ':memory:';
 
-import { sequelize, ExamResult } from '../../models';
+import { sequelize, ExamResult, Student, Exam } from '../../models';
 import { EsmeAggregator, listTests } from '../../controllers/resultsController';
 
-beforeAll(async () => {
+beforeEach(async () => {
   await sequelize.sync({ force: true });
 });
 
@@ -12,23 +12,34 @@ afterAll(async () => {
 });
 
 test('aggregateTestResults computes summary statistics correctly', async () => {
+  const student1 = await Student.create({
+    studentNumber: 'S1',
+    firstName: 'A',
+    lastName: 'One'
+  });
+
+  const student2 = await Student.create({
+    studentNumber: 'S2',
+    firstName: 'B',
+    lastName: 'Two'
+  });
+
+  const exam = await Exam.create({
+    testId: '9999',
+    marksAvailable: 20
+  });
+  
   await ExamResult.bulkCreate([
     {
-      testId: '9999',
-      studentNumber: 'S1',
-      firstName: 'A',
-      lastName: 'One',
+      examId: exam.id,
+      studentId: student1.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 20,
       marksObtained: 10,
     },
     {
-      testId: '9999',
-      studentNumber: 'S2',
-      firstName: 'B',
-      lastName: 'Two',
+      examId: exam.id,
+      studentId: student2.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 20,
       marksObtained: 20,
     },
   ]);
@@ -48,32 +59,46 @@ test('aggregateTestResults computes summary statistics correctly', async () => {
 });
 
 test('histogramTestResults returns fixed bins and handles perfect scores', async () => {
+  const student1 = await Student.create({
+    studentNumber: 'S1',
+    firstName: 'A',
+    lastName: 'One'
+  });
+
+  const student2 = await Student.create({
+    studentNumber: 'S2',
+    firstName: 'B',
+    lastName: 'Two'
+  });
+
+  const student3 = await Student.create({
+    studentNumber: 'S3',
+    firstName: 'B',
+    lastName: 'Two'
+  });
+
+  const exam = await Exam.create({
+    testId: '8888',
+    marksAvailable: 20
+  });
+  
   await ExamResult.bulkCreate([
     {
-      testId: '8888',
-      studentNumber: 'H1',
-      firstName: 'X',
-      lastName: 'One',
+      examId: exam.id,
+      studentId: student1.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 10,
       marksObtained: 1,
     },
     {
-      testId: '8888',
-      studentNumber: 'H2',
-      firstName: 'Y',
-      lastName: 'Two',
+      examId: exam.id,
+      studentId: student2.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 10,
       marksObtained: 9,
     },
     {
-      testId: '8888',
-      studentNumber: 'H3',
-      firstName: 'Z',
-      lastName: 'Three',
+      examId: exam.id,
+      studentId: student3.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 20,
       marksObtained: 20,
     },
   ]);
@@ -82,39 +107,54 @@ test('histogramTestResults returns fixed bins and handles perfect scores', async
   expect(histogram).toEqual({
     total: 3,
     bins: [
-      { lower_pct: 0, upper_pct: 10, count: 0 },
-      { lower_pct: 10, upper_pct: 20, count: 1 },
+      { lower_pct: 0, upper_pct: 10, count: 1 },
+      { lower_pct: 10, upper_pct: 20, count: 0 },
       { lower_pct: 20, upper_pct: 30, count: 0 },
       { lower_pct: 30, upper_pct: 40, count: 0 },
-      { lower_pct: 40, upper_pct: 50, count: 0 },
+      { lower_pct: 40, upper_pct: 50, count: 1 },
       { lower_pct: 50, upper_pct: 60, count: 0 },
       { lower_pct: 60, upper_pct: 70, count: 0 },
       { lower_pct: 70, upper_pct: 80, count: 0 },
       { lower_pct: 80, upper_pct: 90, count: 0 },
-      { lower_pct: 90, upper_pct: 100, count: 2 },
+      { lower_pct: 90, upper_pct: 100, count: 1 },
     ],
   });
 });
 
 test('listTests returns ordered list and counts students correctly', async () => {
-  await sequelize.sync({ force: true });
+  const student1 = await Student.create({
+    studentNumber: 'S1',
+    firstName: 'A',
+    lastName: 'One'
+  });
+
+  const student2 = await Student.create({
+    studentNumber: 'S2',
+    firstName: 'B',
+    lastName: 'Two'
+  });
+
+  const exam1 = await Exam.create({
+    testId: 'b000',
+    marksAvailable: 10
+  });
+
+  const exam2 = await Exam.create({
+    testId: 'a000',
+    marksAvailable: 20
+  });
+
   await ExamResult.bulkCreate([
     {
-      testId: 'b000',
-      studentNumber: 'B1',
-      firstName: 'B',
-      lastName: 'One',
+      studentId: student1.id,
+      examId: exam1.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 10,
       marksObtained: 7,
     },
     {
-      testId: 'a000',
-      studentNumber: 'A1',
-      firstName: 'A',
-      lastName: 'One',
+      studentId: student2.id,
+      examId: exam2.id,
       scannedOn: new Date('2024-01-01T00:00:00Z'),
-      marksAvailable: 20,
       marksObtained: 15,
     },
   ]);
